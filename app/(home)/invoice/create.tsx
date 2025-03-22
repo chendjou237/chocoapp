@@ -8,6 +8,7 @@ import { Text } from '~/components/ui/text';
 import type { Product } from '~/lib/supabase';
 import { supabase } from '~/lib/supabase';
 import { useAuth } from '~/lib/useAuth';
+import { formatCurrency } from '~/lib/utils/currency';
 
 export default function CreateInvoiceScreen() {
   const router = useRouter();
@@ -113,7 +114,7 @@ export default function CreateInvoiceScreen() {
     });
 
 
-    
+
 
     router.back();
   };
@@ -170,8 +171,9 @@ export default function CreateInvoiceScreen() {
                   {products.map((product) => (
                     <Picker.Item
                       key={product.id}
-                      label={`${product.name} ($${product.price})`}
+                      label={`${product.name} (${formatCurrency(product.price)})`}
                       value={product.id}
+
                     />
                   ))}
                 </Picker>
@@ -189,7 +191,7 @@ export default function CreateInvoiceScreen() {
               </View>
 
               <Text className="text-sm text-right">
-                Subtotal: ${(item.product.price * item.quantity).toFixed(2)}
+                Subtotal: {formatCurrency(item.product.price * item.quantity)}
               </Text>
             </View>
           ))}
@@ -200,7 +202,7 @@ export default function CreateInvoiceScreen() {
 
           <View className="pt-4 border-t border-input">
             <Text className="text-lg font-bold text-right">
-              Total: ${calculateTotal().toFixed(2)}
+              Total: {formatCurrency(calculateTotal())}
             </Text>
           </View>
         </CardContent>

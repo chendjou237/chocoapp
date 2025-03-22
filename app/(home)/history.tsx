@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card';
 import { Text } from '~/components/ui/text';
 import type { ReceiptRecord } from '~/lib/types';
 import { supabase } from '~/lib/utils';
+import { formatCurrency } from '~/lib/utils/currency';
 
 export default function HistoryScreen() {
   const [receipts, setReceipts] = React.useState<ReceiptRecord[]>([]);
@@ -73,7 +74,7 @@ export default function HistoryScreen() {
                 />
               </View>
               <Text className="text-lg font-semibold">
-                Total: ${item.total.toFixed(2)}
+                Total: {formatCurrency(item.total)}
               </Text>
             </CardContent>
           </Card>

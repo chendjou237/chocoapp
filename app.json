@@ -28,8 +28,6 @@
       },
       "permissions": [
         "android.permission.CAMERA",
-        "android.permission.RECORD_AUDIO",
-        "android.permission.CAMERA",
         "android.permission.RECORD_AUDIO"
       ],
       "package": "com.chendjou.chocoapp"
@@ -70,6 +68,7 @@
     "runtimeVersion": "1.0.0",
     "updates": {
       "url": "https://u.expo.dev/549f25c9-820f-41ee-a7ae-a846381fe395"
-    }
+    },
+    "owner": "hustlers237"
   }
 }

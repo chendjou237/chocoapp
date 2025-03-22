@@ -109,6 +109,13 @@ export default function RootLayout() {
           title: "Invoice Detail"
         }}
       />
+         <Tabs.Screen
+        name="objectives-history"
+        options={{
+          href: null,
+          title: "Invoice Detail"
+        }}
+      />
       </Tabs>
       <PortalHost />
     </ThemeProvider>

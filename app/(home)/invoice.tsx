@@ -6,6 +6,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '~/componen
 import { Text } from '~/components/ui/text';
 import { supabase } from '~/lib/supabase';
 import { useAuth } from '~/lib/useAuth';
+import { formatCurrency } from '~/lib/utils/currency';
 
 interface Invoice {
   id: string;
@@ -91,7 +92,7 @@ export default function InvoiceScreen() {
                     <Text className="text-xs text-muted-foreground">{formatDate(invoice.created_at)}</Text>
                   </View>
                   <View className="items-end">
-                    <Text className="font-semibold">${invoice.total_amount.toFixed(2)}</Text>
+                    <Text className="font-semibold">{formatCurrency(invoice.total_amount)}</Text>
                     <Text className="px-2 py-1 text-sm text-green-800 bg-green-100 rounded">{invoice.status}</Text>
                   </View>
                 </TouchableOpacity>
