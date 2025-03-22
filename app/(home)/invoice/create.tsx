@@ -12,6 +12,7 @@ import { useAuth } from '~/lib/useAuth';
 export default function CreateInvoiceScreen() {
   const router = useRouter();
   const { user } = useAuth();
+  const [shopName, setShopName] = React.useState('');
   const [description, setDescription] = React.useState('');
   const [products, setProducts] = React.useState<Product[]>([]);
   const [selectedItems, setSelectedItems] = React.useState<Array<{ product: Product; quantity: number }>>([]);
@@ -45,8 +46,10 @@ export default function CreateInvoiceScreen() {
   };
 
   const updateProduct = (index: number, productId: string) => {
-    const product = products.find(p => p.id === productId);
+    const product = products.find(p => p.id == productId);
     if (product) {
+      //  console.error('hey there');
+
       const newItems = [...selectedItems];
       newItems[index].product = product;
       setSelectedItems(newItems);
@@ -72,8 +75,11 @@ export default function CreateInvoiceScreen() {
       .from('invoices')
       .insert({
         user_id: user.id,
-        total,
+        total_amount:total,
         description,
+        invoice_number: Math.floor(Math.random() * 1000000000),
+        shop_name: shopName,
+        status: 'delivered',
       })
       .select()
       .single();
@@ -87,7 +93,8 @@ export default function CreateInvoiceScreen() {
       invoice_id: invoice.id,
       product_id: item.product.id,
       quantity: item.quantity,
-      price: item.product.price,
+      unit_price: item.product.price,
+      total_price: item.product.price * item.quantity,
     }));
 
     const { error: itemsError } = await supabase
@@ -98,6 +105,15 @@ export default function CreateInvoiceScreen() {
       console.error('Error creating invoice items:', itemsError);
       return;
     }
+
+    router.back();
+    router.push({
+      pathname: '/invoice',
+      params: { refresh: 'true' }
+    });
+
+
+    
 
     router.back();
   };
@@ -116,6 +132,15 @@ export default function CreateInvoiceScreen() {
           <CardTitle>Invoice Details</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
+          <View className="space-y-2">
+            <Text className="text-sm font-medium">Shop Name</Text>
+            <TextInput
+              className="px-3 py-2 h-10 text-sm rounded-md border border-input bg-background"
+              placeholder="Enter shop name"
+              value={shopName}
+              onChangeText={setShopName}
+            />
+          </View>
           <View className="space-y-2">
             <Text className="text-sm font-medium">Description</Text>
             <TextInput
@@ -138,8 +163,9 @@ export default function CreateInvoiceScreen() {
 
               <View className="overflow-hidden rounded-md border">
                 <Picker
-                  selectedValue={item.product.id}
+                selectedValue={item.product.id}
                   onValueChange={(value) => updateProduct(index, value)}
+                  style={{ width: '100%' }}
                 >
                   {products.map((product) => (
                     <Picker.Item

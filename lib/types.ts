@@ -1,9 +1,9 @@
 export interface ReceiptRecord {
   id: string;
   user_id: string;
-  image_url: string;
+  picture: string;
   total: number;
-  created_at: string;
+  created_date: string;
 }
 
 export interface UploadReceiptFormData {

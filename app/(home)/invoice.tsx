@@ -1,14 +1,68 @@
 import { useRouter } from 'expo-router';
 import { Plus } from 'lucide-react-native';
 import * as React from 'react';
-import { ScrollView, TouchableOpacity, View } from 'react-native';
+import { RefreshControl, ScrollView, TouchableOpacity, View } from 'react-native';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '~/components/ui/card';
 import { Text } from '~/components/ui/text';
+import { supabase } from '~/lib/supabase';
+import { useAuth } from '~/lib/useAuth';
+
+interface Invoice {
+  id: string;
+  invoice_number: string;
+  total_amount: number;
+  created_at: string;
+  shop_name: string;
+  status: string;
+}
 
 export default function InvoiceScreen() {
   const router = useRouter();
+  const { user } = useAuth();
+  const [invoices, setInvoices] = React.useState<Invoice[]>([]);
+  const [loading, setLoading] = React.useState(true);
+  const [refreshing, setRefreshing] = React.useState(false);
+
+  const onRefresh = React.useCallback(async () => {
+    setRefreshing(true);
+    await fetchInvoices();
+    setRefreshing(false);
+  }, []);
+
+  React.useEffect(() => {
+    if (user) {
+      fetchInvoices();
+    }
+  }, [user]);
+
+  const fetchInvoices = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('invoices')
+        .select('*')
+        .eq('user_id', user?.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setInvoices(data || []);
+    } catch (error) {
+      console.error('Error fetching invoices:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const formatDate = (date: string) => {
+    return new Date(date).toLocaleDateString();
+  };
+
   return (
-    <ScrollView className="flex-1 p-4 bg-secondary/30">
+    <ScrollView
+      className="flex-1 p-4 bg-secondary/30"
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+      }
+    >
       <View className="mb-4">
         <Text className="text-2xl font-bold">Invoices</Text>
         <Text className="text-muted-foreground">Manage your billing and payments</Text>
@@ -19,40 +73,39 @@ export default function InvoiceScreen() {
           <CardTitle>Recent Invoices</CardTitle>
         </CardHeader>
         <CardContent>
-          <View className="space-y-2">
-            {[1, 2, 3].map((item) => (
-              <View key={item} className="flex-row justify-between items-center p-3 border-b border-border">
-                <View>
-                  <Text className="font-medium">Invoice #{item}0001</Text>
-                  <Text className="text-sm text-muted-foreground">Due {30 - (item * 7)} days</Text>
-                </View>
-                <Text className="font-semibold">${item * 199}.00</Text>
-              </View>
-            ))}
-          </View>
+          {loading ? (
+            <Text className="text-center text-muted-foreground">Loading invoices...</Text>
+          ) : invoices.length === 0 ? (
+            <Text className="text-center text-muted-foreground">No invoices found</Text>
+          ) : (
+            <View className="space-y-2">
+              {invoices.map((invoice) => (
+                <TouchableOpacity
+                  key={invoice.id}
+                  onPress={() => router.push(`/invoice/${invoice.id}`)}
+                  className="flex-row justify-between items-center p-3 border-b border-border"
+                >
+                  <View>
+                    <Text className="font-medium">Invoice #{invoice.invoice_number}</Text>
+                    <Text className="text-sm text-muted-foreground">{invoice.shop_name}</Text>
+                    <Text className="text-xs text-muted-foreground">{formatDate(invoice.created_at)}</Text>
+                  </View>
+                  <View className="items-end">
+                    <Text className="font-semibold">${invoice.total_amount.toFixed(2)}</Text>
+                    <Text className="px-2 py-1 text-sm text-green-800 bg-green-100 rounded">{invoice.status}</Text>
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
         </CardContent>
-        <CardFooter>
-          <Text className="text-sm text-muted-foreground">Showing 3 of 12 invoices</Text>
-        </CardFooter>
+        {invoices.length > 0 && (
+          <CardFooter>
+            <Text className="text-sm text-muted-foreground">Showing {invoices.length} invoices</Text>
+          </CardFooter>
+        )}
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Payment Methods</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <View className="space-y-2">
-            <View className="flex-row justify-between items-center p-3 border-b border-border">
-              <Text className="font-medium">Credit Card ending in 4242</Text>
-              <Text className="px-2 py-1 text-sm text-green-800 bg-green-100 rounded">Default</Text>
-            </View>
-            <View className="flex-row justify-between items-center p-3">
-              <Text className="font-medium">PayPal account</Text>
-              <Text className="text-sm">Connected</Text>
-            </View>
-          </View>
-        </CardContent>
-      </Card>
       <TouchableOpacity
         onPress={() => router.push('/invoice/create')}
         className="absolute right-4 bottom-4 justify-center items-center w-14 h-14 rounded-full shadow-lg bg-primary"

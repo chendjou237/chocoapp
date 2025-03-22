@@ -6,7 +6,9 @@ export interface Product {
   id: string;
   name: string;
   price: number;
-  created_at: string;
+  description:string;
+  stock_quantity: number;
+    created_at: string;
 }
 
 export interface Invoice {

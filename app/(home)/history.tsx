@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { FlatList, Image, View } from 'react-native';
+import { FlatList, Image, RefreshControl, View } from 'react-native';
 import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card';
 import { Text } from '~/components/ui/text';
 import type { ReceiptRecord } from '~/lib/types';
@@ -8,6 +8,7 @@ import { supabase } from '~/lib/utils';
 export default function HistoryScreen() {
   const [receipts, setReceipts] = React.useState<ReceiptRecord[]>([]);
   const [loading, setLoading] = React.useState(true);
+  const [refreshing, setRefreshing] = React.useState(false);
 
   React.useEffect(() => {
     fetchReceipts();
@@ -19,10 +20,10 @@ export default function HistoryScreen() {
       if (!user.data.user) throw new Error('Not authenticated');
 
       const { data, error } = await supabase
-        .from('rbm_records')
+        .from('rbms_records')
         .select('*')
         .eq('user_id', user.data.user.id)
-        .order('created_at', { ascending: false });
+        .order('created_date', { ascending: false });
 
       if (error) throw error;
       setReceipts(data);
@@ -30,8 +31,14 @@ export default function HistoryScreen() {
       console.error('Error fetching receipts:', error);
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
+
+  const onRefresh = React.useCallback(() => {
+    setRefreshing(true);
+    fetchReceipts();
+  }, []);
 
   if (loading) {
     return (
@@ -46,18 +53,21 @@ export default function HistoryScreen() {
       <FlatList
         data={receipts}
         keyExtractor={(item) => item.id}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
         renderItem={({ item }) => (
           <Card className="mb-4">
             <CardHeader>
-              <CardTitle>Receipt #{item.id.slice(0, 8)}</CardTitle>
+              <CardTitle>Receipt #{item.id}</CardTitle>
               <Text className="text-sm text-muted-foreground">
-                {new Date(item.created_at).toLocaleDateString()}
+                {new Date(item.created_date).toLocaleDateString()}
               </Text>
             </CardHeader>
             <CardContent>
               <View className="overflow-hidden mb-2 h-40 rounded-lg bg-muted">
                 <Image
-                  source={{ uri: item.image_url }}
+                  src={item.picture}
                   className="w-full h-full"
                   resizeMode="cover"
                 />

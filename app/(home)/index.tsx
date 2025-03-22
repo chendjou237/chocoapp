@@ -1,8 +1,7 @@
-import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { Link } from 'expo-router';
 import * as React from 'react';
-import { Alert, TextInput, View } from 'react-native';
+import { Alert, Image, KeyboardAvoidingView, Platform, ScrollView, TextInput, View } from 'react-native';
 import { Button } from '~/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '~/components/ui/card';
 import { Text } from '~/components/ui/text';
@@ -14,7 +13,7 @@ export default function Screen() {
   const [loading, setLoading] = React.useState(false);
 
   const pickImage = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
+    const result = await ImagePicker.launchCameraAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       quality: 1,
@@ -53,27 +52,40 @@ export default function Screen() {
         .from('receipts')
         .upload(`${user.data.user.id}/${file.name}`,formData);
 
-      if (storageError) throw storageError;
+      if (storageError) {
+        const errorMessage = storageError.message || 'Failed to upload image to storage';
+        Alert.alert('Storage Error', errorMessage);
+        return;
+      }
 
-      const { data: publicUrl } = supabase.storage
+      const { data: {publicUrl} } = supabase.storage
         .from('receipts')
         .getPublicUrl(`${user.data.user.id}/${file.name}`);
 
       const { error: dbError } = await supabase
-        .from('rbm_records')
+        .from('rbms_records')
         .insert({
           user_id: user.data.user.id,
-          image_url: publicUrl.publicUrl,
-          total: parseFloat(total),
+          picture: publicUrl,
+          total: total,
+
         });
 
-      if (dbError) throw dbError;
+      if (dbError) {
+        const errorMessage = dbError.message || 'Failed to save receipt data';
+        console.error(errorMessage);
+        Alert.alert('Database Error', errorMessage);
+        return;
+      }
 
       Alert.alert('Success', 'Receipt uploaded successfully');
       setImage(null);
       setTotal('');
     } catch (error:any) {
-      Alert.alert('Error', error);
+      const errorMessage = error || 'An unexpected error occurred';
+      console.error(`error: ${error}`);
+
+      Alert.alert('Error', errorMessage);
     } finally {
       setLoading(false);
     }
@@ -84,8 +96,12 @@ export default function Screen() {
   '|rF?hV%2WCj[ayj[a|j[az_NaeWBj@ayfRayfQfQM{M|azj[azf6fQfQfQIpWXofj[ayj[j[fQayWCoeoeaya}j[ayfQa{oLj?j[WVj[ayayj[fQoff7azayj[ayj[j[ayofayayayj[fQj[ayayj[ayfjj[j[ayjuayj[';
 
   return (
-    <View className="flex-1 bg-background">
-      <View className="flex-1">
+    <KeyboardAvoidingView
+      className="flex-1 bg-background"
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 25}
+    >
+      <ScrollView className="flex-1" contentContainerStyle={{ flexGrow: 1 }}>
         {image ? (
           <View className="flex-1 justify-center items-center p-4">
             <Card className="w-full max-w-sm">
@@ -95,11 +111,10 @@ export default function Screen() {
               <CardContent className="space-y-4">
                 <View className="overflow-hidden h-64 rounded-lg bg-muted">
                   <Image
-                    source={{ uri: image }}
+                    src={image}
                     className="w-full h-full"
-                    contentFit="cover"
-                    transition={1000}
-                    cachePolicy="memory"
+                  //   contentFit="cover"
+                  //   transition={1000}
                   />
                 </View>
                 <View className="space-y-2">
@@ -141,8 +156,7 @@ export default function Screen() {
             </Link>
           </View>
         )}
-      </View>
-
-    </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
