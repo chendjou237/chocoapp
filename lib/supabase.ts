@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createClient } from '@supabase/supabase-js';
 import 'react-native-url-polyfill/auto';
+import { ObjectiveResponse } from './types/objectives';
 
 export interface Product {
   id: string;
@@ -39,3 +40,17 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     detectSessionInUrl: false,
   },
 });
+
+export async function fetchUserObjectives(userId: string): Promise<ObjectiveResponse> {
+  try {
+    const { data, error } = await supabase
+      .from('objectives')
+      .select('*')
+      .eq('assignee_id', userId)
+      .order('created_at', { ascending: false });
+
+    return { data, error };
+  } catch (error) {
+    return { data: null, error: error as Error };
+  }
+}

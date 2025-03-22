@@ -2,6 +2,7 @@ import { Picker } from '@react-native-picker/picker';
 import { useRouter } from 'expo-router';
 import * as React from 'react';
 import { ScrollView, TextInput, View } from 'react-native';
+import { Toast } from 'toastify-react-native';
 import { Button } from '~/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '~/components/ui/card';
 import { Text } from '~/components/ui/text';
@@ -106,18 +107,16 @@ export default function CreateInvoiceScreen() {
       console.error('Error creating invoice items:', itemsError);
       return;
     }
-
-    router.back();
+    Toast.success('invoice created successfully', 'bottom');
     router.push({
       pathname: '/invoice',
       params: { refresh: 'true' }
     });
+};
 
 
+   //  router.back();
 
-
-    router.back();
-  };
 
   return (
     <ScrollView className="flex-1 p-4 bg-secondary/30">

@@ -1,6 +1,7 @@
 import { Link, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Alert, TextInput, View } from 'react-native';
+import { ObjectivesDialog } from '~/components/ObjectivesDialog';
 import { Button } from '~/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '~/components/ui/card';
 import { Text } from '~/components/ui/text';
@@ -10,6 +11,7 @@ export default function SignInScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showObjectives, setShowObjectives] = useState(false);
   const router = useRouter();
 
   async function signInWithEmail() {
@@ -21,7 +23,10 @@ export default function SignInScreen() {
       });
 
       if (error) throw error;
-      router.replace('/');
+      setShowObjectives(true);
+      setTimeout(() => {
+        router.replace('/');
+      }, 2000);
     } catch (error) {
       Alert.alert('Error', error.message);
     } finally {
@@ -31,6 +36,7 @@ export default function SignInScreen() {
 
   return (
     <View className="flex-1 justify-center items-center p-6 bg-background">
+      <ObjectivesDialog open={showObjectives} onOpenChange={setShowObjectives} />
       <Card className="w-full max-w-sm rounded-xl">
         <CardHeader>
           <CardTitle className="text-center">Sign In</CardTitle>

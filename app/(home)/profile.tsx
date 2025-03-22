@@ -7,6 +7,7 @@ import { Button } from '~/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '~/components/ui/card';
 import { Progress } from '~/components/ui/progress';
 import { Text } from '~/components/ui/text';
+import { fetchUserObjectives } from '~/lib/supabase';
 import { useAuth } from '~/lib/useAuth';
 import { formatCurrency } from '~/lib/utils/currency';
 
@@ -16,6 +17,25 @@ const GITHUB_AVATAR_URI =
 export default function ProfileScreen() {
   const { user } = useAuth();
   const userInitials = user?.email ? user.email.substring(0, 2).toUpperCase() : '';
+  const [objective, setObjective] = React.useState<{ goal: number; progression: number } | null>(null);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    async function loadObjectives() {
+      if (user?.id) {
+        const { data } = await fetchUserObjectives(user.id);
+        if (data && data.length > 0) {
+          const latestObjective = data[0];
+          setObjective({
+            goal: latestObjective.goal,
+            progression: latestObjective.progression
+          });
+        }
+        setLoading(false);
+      }
+    }
+    loadObjectives();
+  }, [user]);
 
   return (
     <ScrollView className="flex-1 p-4 bg-secondary/30">
@@ -42,28 +62,32 @@ export default function ProfileScreen() {
           <CardTitle>Today's Financial Objective</CardTitle>
         </CardHeader>
         <CardContent>
-          <View className="space-y-4">
-            <View className="flex-row justify-between items-center">
-              <Text className="font-medium">Daily Revenue Goal</Text>
-              <Text className="text-sm">{formatCurrency(10000)}</Text>
-            </View>
-            <Progress
-              value={75}
-              className="h-2"
-              indicatorClassName="bg-green-600"
-            />
-            <View className="flex-row justify-between items-center">
-              <Text className="text-sm text-muted-foreground">Current: {formatCurrency(7500)}</Text>
-              <Text className="text-sm text-muted-foreground">75% Complete</Text>
+          <View className="space-y-6">
+            <View className="space-y-4">
+              <View className="flex-row justify-between items-center">
+                <Text className="font-medium">Daily Revenue Goal</Text>
+                <Text className="text-sm font-semibold">{objective ? formatCurrency(objective.goal) : '-'}</Text>
+              </View>
+              {objective && (
+                <>
+                  <Progress
+                    value={objective.progression}
+                    className="h-2"
+                    indicatorClassName="bg-green-600"
+                  />
+                  <View className="flex-row justify-between items-center">
+                    <Text className="text-sm text-muted-foreground">Current: {formatCurrency(objective.goal * (objective.progression / 100))}</Text>
+                    <Text className="text-sm text-muted-foreground">{objective.progression}% Complete</Text>
+                  </View>
+                </>
+              )}
             </View>
             <Button
               onPress={() => router.push('/objectives-history')}
               variant="outline"
               className="w-full"
-
-            ><Text>
-              View Objectives History
-            </Text>
+            >
+              <Text>View Objectives History</Text>
             </Button>
           </View>
         </CardContent>

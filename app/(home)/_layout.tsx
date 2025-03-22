@@ -10,6 +10,7 @@ import { Platform } from 'react-native';
 import { ThemeToggle } from '~/components/ThemeToggle';
 import { NAV_THEME } from '~/lib/constants';
 import { useColorScheme } from '~/lib/useColorScheme';
+import ToastManager from "toastify-react-native";
 
 const LIGHT_THEME: Theme = {
   ...DefaultTheme,
@@ -27,17 +28,20 @@ export {
 
 import { Redirect } from 'expo-router';
 import { useAuth } from '~/lib/useAuth';
+import { ObjectivesDialog } from '~/components/ObjectivesDialog';
 
 export default function RootLayout() {
   const { isAuthenticated, loading } = useAuth();
   const { colorScheme, isDarkColorScheme } = useColorScheme();
   const [isColorSchemeLoaded, setIsColorSchemeLoaded] = React.useState(true);
+  const [showObjectives, setShowObjectives] = React.useState(false);
 
-  // Use effect to handle any post-mount operations if needed
+  // Show objectives dialog on mount or after authentication
   React.useEffect(() => {
-    // Any initialization that needs to happen after mount
-    setIsColorSchemeLoaded(true);
-  }, []);
+    if (isAuthenticated) {
+      setShowObjectives(true);
+    }
+  }, [isAuthenticated]);
 
   // If still loading auth state, show nothing yet
   if (loading) {
@@ -58,6 +62,9 @@ export default function RootLayout() {
   return (
     <ThemeProvider value={isDarkColorScheme ? DARK_THEME : LIGHT_THEME}>
       <StatusBar style={isDarkColorScheme ? 'light' : 'dark'} />
+      <ToastManager />
+
+      <ObjectivesDialog open={showObjectives} onOpenChange={setShowObjectives} />
       <Tabs
         screenOptions={{
           tabBarActiveTintColor: isDarkColorScheme ? NAV_THEME.dark.primary : NAV_THEME.light.primary,

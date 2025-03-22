@@ -44,10 +44,13 @@ export default function InvoiceScreen() {
         .eq('user_id', user?.id)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching invoices:', error);
+        return;
+      }
       setInvoices(data || []);
     } catch (error) {
-      console.error('Error fetching invoices:', error);
+      console.error('Unexpected error fetching invoices:', error);
     } finally {
       setLoading(false);
     }
