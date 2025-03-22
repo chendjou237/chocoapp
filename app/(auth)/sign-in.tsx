@@ -45,7 +45,7 @@ export default function SignInScreen() {
           <View className="space-y-2">
             <Text className="text-sm font-medium">Email</Text>
             <TextInput
-              className="px-3 py-2 h-10 text-sm rounded-md border border-input bg-background"
+              className="px-3 py-2 h-10 text-sm rounded-md border border-input bg-background text-foreground"
               placeholder="Email"
               value={email}
               onChangeText={setEmail}
@@ -56,7 +56,7 @@ export default function SignInScreen() {
           <View className="space-y-2">
             <Text className="text-sm font-medium">Password</Text>
             <TextInput
-              className="px-3 py-2 h-10 text-sm rounded-md border border-input bg-background"
+              className="px-3 py-2 h-10 text-sm rounded-md border border-input bg-background text-foreground"
               placeholder="Password"
               value={password}
               onChangeText={setPassword}
